@@ -1,35 +1,28 @@
 import pandas as pd
+import glob
 import os
 
 # Path to your data folder
 data_folder = "data"
 
-# List of all CSV files inside the folder
-csv_files = [f for f in os.listdir(data_folder) if f.endswith(".csv")]
+# Read all CSV files in the folder
+all_files = glob.glob(os.path.join(data_folder, "*.csv"))
 
-# List to hold all filtered DataFrames
-filtered_dfs = []
+# Combine all CSVs into one DataFrame
+df_list = [pd.read_csv(file) for file in all_files]
+df = pd.concat(df_list)
 
-for file in csv_files:
-    file_path = os.path.join(data_folder, file)
-    df = pd.read_csv(file_path)
-    
-    # Filter only pink morsels (case-insensitive just in case)
-    df = df[df["product"].str.lower() == "pink morsel"]
-    
-    # Create the sales column
-    df["sales"] = df["quantity"] * df["price"]
-    
-    # Keep only the required columns
-    df = df[["sales", "date", "region"]]
-    
-    # Add to list
-    filtered_dfs.append(df)
+# Filter only 'Pink Morsel' products
+df = df[df['product'] == 'pink morsel']
 
-# Combine all filtered data
-final_df = pd.concat(filtered_dfs)
+# Create sales column
+df['sales'] = df['quantity'] * df['price']
 
-# Save to a new CSV file
-final_df.to_csv("formatted_output.csv", index=False)
+# Keep only the required columns
+df = df[['sales', 'date', 'region']]
 
-print("✅ Data processing complete! File saved as formatted_output.csv")
+# Save to processed_data.csv
+os.makedirs(data_folder, exist_ok=True)
+df.to_csv(os.path.join(data_folder, "processed_data.csv"), index=False)
+
+print("✅ processed_data.csv created successfully!")
